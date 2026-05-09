@@ -1,0 +1,35 @@
+name: Morning Email Draft Routine
+
+on:
+  schedule:
+    # 7:00 AM PST (UTC-8). Runs at 8:00 AM during PDT (UTC-7, Mar–Nov).
+    # Adjust the hour if you want exact 7am year-round in one season.
+    - cron: '0 15 * * *'
+  workflow_dispatch: # Allow manual trigger from the Actions tab
+
+jobs:
+  draft-emails:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Gmail token to disk
+        run: echo '${{ secrets.GMAIL_TOKEN_JSON }}' > token.json
+
+      - name: Run email draft routine
+        env:
+          GMAIL_CREDENTIALS_JSON: ${{ secrets.GMAIL_CREDENTIALS_JSON }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python routine.py
